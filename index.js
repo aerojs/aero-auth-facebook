@@ -2,18 +2,19 @@ let passport = require('passport')
 let FacebookStrategy = require('passport-facebook').Strategy
 
 module.exports = app => {
-	let config = Object.assign({
-			callbackURL: '/auth/facebook/callback',
-			profileFields: ['id', 'name', 'email', 'gender', 'age_range'],
-			enableProof: false,
-			passReqToCallback: true
-		},
-		app.apiKeys.facebook
-	)
+	let config = {
+		callbackURL: '/auth/facebook/callback',
+		profileFields: ['id', 'name', 'email', 'gender', 'age_range'],
+		enableProof: false,
+		passReqToCallback: true,
+		clientID: app.apiKeys.facebook.id,
+		clientSecret: app.apiKeys.facebook.secret
+	}
 	
 	// Register Facebook strategy
 	passport.use(new FacebookStrategy(config,
 		function(request, accessToken, refreshToken, profile, done) {
+			console.log(profile._json)
 			done(undefined, profile._json)
 		}
 	))
