@@ -1,0 +1,28 @@
+{
+	"name": "aero-auth-facebook",
+	"version": "0.0.0",
+	"main": "index.js",
+	"description": "Login via Facebook.",
+	"dependencies": {
+		"passport": "*",
+		"passport-facebook": "*"
+	},
+	"keywords": [
+		"aero",
+		"facebook",
+		"auth",
+		"authorization",
+		"login",
+		"passport"
+	],
+	"repository": {
+		"type" : "git",
+		"url" : "https://github.com/aerojs/aero-auth-facebook"
+	},
+	"author": {
+		"name": "Eduard Urbach",
+		"email": "e.urbach@gmail.com",
+		"url": "https://blitzprog.org"
+	},
+	"license": "GPL-3.0"
+}
