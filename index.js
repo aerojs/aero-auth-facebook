@@ -16,7 +16,7 @@ module.exports = app => {
 			app.auth.facebook.login = Promise.coroutine(app.auth.facebook.login)
 
 		let config = {
-			callbackURL: '/auth/facebook/callback',
+			callbackURL: app.production ? `https://${app.config.domain}/auth/facebook/callback` : '/auth/facebook/callback',
 			profileFields: app.auth.facebook.fields || ['id', 'name', 'email', 'gender', 'age_range'],
 			enableProof: false,
 			passReqToCallback: true,
