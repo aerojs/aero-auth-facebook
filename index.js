@@ -2,36 +2,48 @@ let passport = require('passport')
 let FacebookStrategy = require('passport-facebook').Strategy
 
 module.exports = app => {
-	let config = {
-		callbackURL: '/auth/facebook/callback',
-		profileFields: ['id', 'name', 'email', 'gender', 'age_range'],
-		enableProof: false,
-		passReqToCallback: true,
-		clientID: app.apiKeys.facebook.id,
-		clientSecret: app.apiKeys.facebook.secret
-	}
-	
-	// Register Facebook strategy
-	passport.use(new FacebookStrategy(config,
-		function(request, accessToken, refreshToken, profile, done) {
-			console.log(profile._json)
-			done(undefined, profile._json)
-		}
-	))
-	
-	// Facebook login
-	app.get('/auth/facebook', passport.authenticate('facebook', {
-		scope: [
-			'email',
-			'public_profile'
-		]
-	}))
+	app.on('startup loaded', () => {
+		if(!app.auth || !app.auth.facebook)
+			throw new Error('Missing Facebook configuration. Please define app.auth.facebook')
 
-	// Facebook callback
-	app.get('/auth/facebook/callback',
-		passport.authenticate('facebook', {
-			successRedirect: '/',
-			failureRedirect: '/login'
-		})
-	)
+		if(!app.api.facebook || !app.api.facebook.id || !app.api.facebook.secret)
+			throw new Error('Missing Facebook API keys. Please add them to security/api-keys.json')
+
+		if(!app.auth.facebook.login)
+			throw new Error("app.auth.facebook.login needs to be defined")
+
+		if(app.auth.facebook.login.constructor.name === 'GeneratorFunction')
+			app.auth.facebook.login = Promise.coroutine(app.auth.facebook.login)
+
+		let config = {
+			callbackURL: '/auth/facebook/callback',
+			profileFields: app.auth.facebook.fields || ['id', 'name', 'email', 'gender', 'age_range'],
+			enableProof: false,
+			passReqToCallback: true,
+			clientID: app.api.facebook.id,
+			clientSecret: app.api.facebook.secret
+		}
+
+		// Register Facebook strategy
+		passport.use(new FacebookStrategy(config,
+			function(request, accessToken, refreshToken, profile, done) {
+				app.auth.facebook.login(profile._json)
+				.then(user => done(undefined, user))
+				.catch(error => done(error, false))
+			}
+		))
+
+		// Facebook login
+		app.get('/auth/facebook', passport.authenticate('facebook', {
+			scope: app.auth.facebook.scopes || [
+				'email',
+				'public_profile'
+			]
+		}))
+
+		// Facebook callback
+		app.get('/auth/facebook/callback',
+			passport.authenticate('facebook', app.auth.facebook.onLogin || { successRedirect: '/' })
+		)
+	})
 }
